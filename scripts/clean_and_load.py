@@ -1,7 +1,7 @@
 """
 Cleans the raw Online Retail II data and loads it into data/retail.db
 
-Cleaning rules (decided after looking at the data in the notebook):
+Cleaning rules (decided after exploring the raw data first):
   - cancelled invoices (start with 'C') go to the returns table
   - drop rows with quantity <= 0 or price <= 0 (adjustments, damaged stock etc.)
   - drop non-product stock codes like POST, DOT, M, BANK CHARGES, AMAZONFEE
