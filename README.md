@@ -2,9 +2,9 @@
 
 Analysis of about 1 million transactions from a UK online gift retailer (Dec 2009 to Dec 2011).
 I loaded the raw Excel file into a SQLite database, answered the business questions with SQL,
-and built a small Power BI style dashboard that runs on GitHub Pages.
+and built a Power BI style dashboard for it that runs in the browser.
 
-**Live dashboard:** https://tejdeep-67.github.io/retail-sales-analytics/
+**Live dashboard:** https://tejdeep-retail-analytics.netlify.app
 
 ![dashboard](images/dashboard.png)
 
@@ -36,8 +36,29 @@ The data is not stored in this repo. `scripts/download_data.py` downloads it.
 3. **Analysis in SQL** (`sql/analysis.sql`): KPIs, monthly trend with `LAG()`, top products and countries,
    RFM segmentation with `NTILE()`, cohort retention, Pareto split of customers, and returns per year.
    `scripts/run_queries.py` runs every query and saves the results in `outputs/`.
-4. **Dashboard** (`docs/`): GitHub Pages can't run Python, so `scripts/build_dashboard.py` runs the queries for
-   every Year x Market slicer combination and saves them to `data.json`. The page draws them with Plotly.
+4. **Dashboard** (`docs/`): the site is static (hosted on Netlify, no server), so `scripts/build_dashboard.py`
+   runs the queries for every filter combination (3 years x 3 markets, plus the top 10 countries) and saves
+   them to `data.json` (about 170 KB). The page just picks the right view and draws it with ECharts.
+
+## Dashboard
+
+I tried to make it feel like a Power BI report:
+
+- **Slicers** for year, market (UK / international) and country. Active filters show as chips you can remove.
+- **Cross-filtering:** click a country bar or a slice of the market donut and every visual on the page
+  updates to that selection. Click it again to clear it.
+- **KPI tiles** with a small monthly sparkline each. When 2011 is selected they also show the change vs 2010
+  (2011 stops on 9 Dec, so that comparison is a bit unfair to 2011).
+- **Highlights** card that is worked out from the current selection (best month, busiest hour, best seller,
+  Sep-Nov share).
+- A second report page, **Customers**, with the RFM segments as a treemap (click a segment to see its numbers),
+  the cohort retention heatmap, the Pareto split and cancelled orders per year.
+- The filters are kept in the URL, so a filtered view can be shared, e.g. `?year=2011&country=Germany`.
+- Works on a phone (the grid becomes one column and the report pages move to a tab bar at the bottom).
+
+![customers page](images/customers_page.png)
+
+<img src="images/dashboard_mobile.png" width="300" alt="dashboard on a phone">
 
 ## Results
 
@@ -87,7 +108,8 @@ retail-sales-analytics/
 │   ├── schema.sql
 │   └── analysis.sql
 ├── outputs/                 # query results as csv
-├── docs/                    # dashboard (GitHub Pages)
+├── docs/                    # dashboard (static site, deployed on Netlify)
+├── netlify.toml
 └── images/
 ```
 
@@ -107,6 +129,9 @@ python scripts/build_dashboard.py
 cd docs && python -m http.server 8000
 # open http://localhost:8000
 ```
+
+Deploying: Netlify just publishes the `docs/` folder (see `netlify.toml`), there is no build step because
+`data.json` is already generated and committed.
 
 You can also open `data/retail.db` in DB Browser for SQLite and run the queries in `sql/analysis.sql` yourself.
 
