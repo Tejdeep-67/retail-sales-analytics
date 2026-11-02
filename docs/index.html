@@ -4,56 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Retail Sales Dashboard | Tejdeep Kellampalli</title>
+  <meta name="description" content="Power BI style sales dashboard for 1M+ transactions of a UK online gift retailer. SQL + Python + ECharts.">
+  <meta name="theme-color" content="#0c5c5e">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>Retail Sales Dashboard</h1>
-      <p class="sub">Online Retail II (UCI) &middot; Dec 2009 &ndash; Dec 2011 &middot; values in GBP</p>
+  <header class="appbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="4" y="16" width="6" height="12" rx="1.5"/>
+        <rect x="13" y="9" width="6" height="19" rx="1.5"/>
+        <rect x="22" y="4" width="6" height="24" rx="1.5"/>
+      </svg>
+      <div>
+        <h1>Retail Sales Analytics</h1>
+        <p class="sub" id="subtitle">Online Retail II (UCI) &middot; Dec 2009 &ndash; Dec 2011 &middot; GBP</p>
+      </div>
     </div>
-    <div class="slicers">
-      <label>Year
-        <select id="year">
-          <option>All</option>
-          <option>2010</option>
-          <option>2011</option>
-        </select>
-      </label>
-      <label>Market
-        <select id="market">
-          <option>All</option>
-          <option>UK</option>
-          <option>International</option>
-        </select>
-      </label>
-    </div>
+    <a class="gh" href="https://github.com/Tejdeep-67/retail-sales-analytics" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>Code &amp; SQL</span>
+    </a>
   </header>
 
+  <section class="filters" aria-label="Filters">
+    <div class="slicer">
+      <span class="slicer-label">Year</span>
+      <div class="seg" id="year" role="radiogroup" aria-label="Year">
+        <button role="radio" data-v="All" aria-checked="true">All</button>
+        <button role="radio" data-v="2010" aria-checked="false">2010</button>
+        <button role="radio" data-v="2011" aria-checked="false">2011</button>
+      </div>
+    </div>
+    <div class="slicer">
+      <span class="slicer-label">Market</span>
+      <div class="seg" id="market" role="radiogroup" aria-label="Market">
+        <button role="radio" data-v="All" aria-checked="true">All</button>
+        <button role="radio" data-v="UK" aria-checked="false">UK</button>
+        <button role="radio" data-v="International" aria-checked="false">International</button>
+      </div>
+    </div>
+    <div class="slicer">
+      <label class="slicer-label" for="country">Country</label>
+      <div class="select-wrap">
+        <select id="country"><option value="">All countries</option></select>
+      </div>
+    </div>
+    <div class="chips" id="chips" aria-live="polite"></div>
+    <button class="reset" id="reset" type="button" hidden>Clear filters</button>
+  </section>
+
   <main>
-    <section class="kpis">
-      <div class="card"><span class="label">Revenue</span><span class="value" id="k-revenue">-</span></div>
-      <div class="card"><span class="label">Orders</span><span class="value" id="k-orders">-</span></div>
-      <div class="card"><span class="label">Avg Order Value</span><span class="value" id="k-aov">-</span></div>
-      <div class="card"><span class="label">Customers</span><span class="value" id="k-customers">-</span></div>
-      <div class="card"><span class="label">Repeat Customers</span><span class="value" id="k-repeat">-</span></div>
+    <!-- page 1 -->
+    <section class="page is-active" id="page-overview" aria-label="Overview">
+      <div class="kpis">
+        <article class="kpi reveal" data-k="revenue">
+          <span class="kpi-label">Revenue</span>
+          <span class="kpi-value" id="k-revenue">&nbsp;</span>
+          <span class="kpi-delta" id="d-revenue"></span>
+          <svg class="spark" id="s-revenue" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
+        </article>
+        <article class="kpi reveal" data-k="orders">
+          <span class="kpi-label">Orders</span>
+          <span class="kpi-value" id="k-orders">&nbsp;</span>
+          <span class="kpi-delta" id="d-orders"></span>
+          <svg class="spark" id="s-orders" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
+        </article>
+        <article class="kpi reveal" data-k="aov">
+          <span class="kpi-label">Avg order value</span>
+          <span class="kpi-value" id="k-aov">&nbsp;</span>
+          <span class="kpi-delta" id="d-aov"></span>
+          <svg class="spark" id="s-aov" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
+        </article>
+        <article class="kpi reveal" data-k="customers">
+          <span class="kpi-label">Customers</span>
+          <span class="kpi-value" id="k-customers">&nbsp;</span>
+          <span class="kpi-delta" id="d-customers"></span>
+          <svg class="spark" id="s-customers" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
+        </article>
+        <article class="kpi kpi-ring reveal" data-k="repeat">
+          <div>
+            <span class="kpi-label">Repeat customers</span>
+            <span class="kpi-value" id="k-repeat">&nbsp;</span>
+            <span class="kpi-delta muted" id="d-repeat">ordered more than once</span>
+          </div>
+          <svg class="ring" viewBox="0 0 44 44" aria-hidden="true">
+            <circle cx="22" cy="22" r="18" class="ring-bg"/>
+            <circle cx="22" cy="22" r="18" class="ring-fg" id="ring"/>
+          </svg>
+        </article>
+      </div>
+
+      <div class="grid">
+        <article class="panel span-8 reveal">
+          <header><h2>Monthly revenue and orders</h2><span class="hint">Dec 2011 only has data up to the 9th</span></header>
+          <div class="chart" id="c-monthly"></div>
+        </article>
+        <article class="panel span-4 reveal">
+          <header><h2>Market split</h2><span class="hint">click a slice to filter</span></header>
+          <div class="chart" id="c-market"></div>
+        </article>
+        <article class="panel span-6 reveal">
+          <header><h2>Top 10 products</h2><span class="hint" id="products-hint">by revenue</span></header>
+          <div class="chart tall" id="c-products"></div>
+        </article>
+        <article class="panel span-6 reveal">
+          <header>
+            <h2>Top countries</h2>
+            <label class="toggle"><input type="checkbox" id="exclude-uk" checked> <span>Hide UK</span></label>
+          </header>
+          <div class="chart tall" id="c-countries"></div>
+          <p class="panel-foot">Click a bar to cross-filter the whole page.</p>
+        </article>
+        <article class="panel span-8 reveal">
+          <header><h2>When do orders come in?</h2><span class="hint">orders by weekday and hour (UK time)</span></header>
+          <div class="chart" id="c-heat"></div>
+        </article>
+        <article class="panel span-4 highlights reveal">
+          <header><h2>Highlights</h2><span class="hint" id="hl-scope">all data</span></header>
+          <ul id="highlights"></ul>
+        </article>
+      </div>
     </section>
 
-    <section class="grid">
-      <div class="panel wide"><h2>Monthly revenue <span class="note">(Dec 2011 only has data up to the 9th)</span></h2><div id="c-monthly" class="chart"></div></div>
-      <div class="panel"><h2>Top 10 products</h2><div id="c-products" class="chart"></div></div>
-      <div class="panel"><h2>Top countries</h2><div id="c-countries" class="chart"></div></div>
-      <div class="panel"><h2>Orders by day and hour</h2><div id="c-heat" class="chart"></div></div>
-      <div class="panel"><h2>Customer segments (RFM, all data)</h2><div id="c-rfm" class="chart"></div></div>
+    <!-- page 2 -->
+    <section class="page" id="page-customers" aria-label="Customers">
+      <div class="kpis kpis-4">
+        <article class="kpi reveal"><span class="kpi-label">Champions share of revenue</span><span class="kpi-value" id="k-champ">&nbsp;</span><span class="kpi-delta muted" id="d-champ"></span></article>
+        <article class="kpi reveal"><span class="kpi-label">Top 20% of customers</span><span class="kpi-value" id="k-pareto">&nbsp;</span><span class="kpi-delta muted">of all revenue</span></article>
+        <article class="kpi reveal"><span class="kpi-label">"At Risk" customers</span><span class="kpi-value" id="k-risk">&nbsp;</span><span class="kpi-delta muted" id="d-risk"></span></article>
+        <article class="kpi reveal"><span class="kpi-label">Cancelled orders value</span><span class="kpi-value" id="k-cancel">&nbsp;</span><span class="kpi-delta muted" id="d-cancel"></span></article>
+      </div>
+      <p class="page-note">RFM, cohorts and Pareto are calculated on the whole dataset, so the slicers don't apply on this page.</p>
+      <div class="grid">
+        <article class="panel span-7 reveal">
+          <header><h2>RFM segments</h2><span class="hint">box size = revenue &middot; click one</span></header>
+          <div class="chart tall" id="c-rfm"></div>
+        </article>
+        <article class="panel span-5 reveal segment-card" id="segment-card">
+          <header><h2 id="seg-name">Champions</h2><span class="hint">segment details</span></header>
+          <dl class="seg-stats" id="seg-stats"></dl>
+          <div class="seg-bars" id="seg-bars"></div>
+          <p class="seg-advice" id="seg-advice"></p>
+        </article>
+        <article class="panel span-12 reveal">
+          <header><h2>Cohort retention</h2><span class="hint">% of each month's new customers who ordered again N months later</span></header>
+          <div class="chart cohort" id="c-cohort"></div>
+        </article>
+        <article class="panel span-6 reveal">
+          <header><h2>Revenue by customer quintile</h2><span class="hint">customers ranked by spend, split into 5 equal groups</span></header>
+          <div class="chart" id="c-pareto"></div>
+        </article>
+        <article class="panel span-6 reveal">
+          <header><h2>Cancelled orders by year</h2><span class="hint">invoices starting with "C"</span></header>
+          <div class="chart" id="c-returns"></div>
+        </article>
+      </div>
     </section>
 
-    <p class="foot">
-      Built with SQLite, Python and Plotly. Code and SQL:
-      <a href="https://github.com/Tejdeep-67/retail-sales-analytics">github.com/Tejdeep-67/retail-sales-analytics</a>
-    </p>
+    <p class="foot">Built with SQLite, Python and ECharts &middot; data: Online Retail II, UCI ML Repository (CC BY 4.0) &middot; by Tejdeep Kellampalli</p>
   </main>
 
-  <script src="app.js"></script>
+  <nav class="tabs" aria-label="Report pages">
+    <button class="tab is-active" data-page="overview" aria-current="page">Overview</button>
+    <button class="tab" data-page="customers">Customers</button>
+    <span class="tab-ink" aria-hidden="true"></span>
+  </nav>
 </body>
 </html>
