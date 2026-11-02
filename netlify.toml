@@ -1,0 +1,15 @@
+# Netlify settings. The dashboard is plain static files in docs/,
+# data.json is made beforehand by scripts/build_dashboard.py, so no build step is needed.
+[build]
+  publish = "docs"
+
+[[headers]]
+  for = "/data.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
