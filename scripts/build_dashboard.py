@@ -1,9 +1,11 @@
 """
 Builds the static dashboard in docs/ (served with GitHub Pages).
 
-The page has two slicers (year and market). GitHub Pages can't run Python,
-so this script runs the SQL for every slicer combination and saves the
-results to docs/data.json. The page then just reads that file.
+The page has slicers for year and market, and clicking a country in the
+country chart filters the other visuals (like cross-filtering in Power BI).
+The site is static (Netlify just serves docs/), so this script runs the SQL
+for every combination the page can ask for and saves the results to
+docs/data.json. The page then just reads that file.
 """
 import json
 import os
@@ -15,6 +17,8 @@ DOCS = os.path.join(BASE, "docs")
 
 YEARS = ["All", "2010", "2011"]
 MARKETS = ["All", "UK", "International"]
+# countries you can click on in the dashboard (top 10 by revenue)
+N_COUNTRIES = 10
 
 
 def where_clause(year, market):
@@ -27,6 +31,9 @@ def where_clause(year, market):
         conds.append("i.country = 'United Kingdom'")
     elif market == "International":
         conds.append("i.country <> 'United Kingdom'")
+    elif market.startswith("c:"):
+        conds.append("i.country = ?")
+        params.append(market[2:])
     sql = ("WHERE " + " AND ".join(conds)) if conds else ""
     return sql, params
 
@@ -60,8 +67,12 @@ def build_one(conn, year, market):
     monthly = q(conn, f"""
         SELECT strftime('%Y-%m', i.invoice_date) AS month,
                ROUND(SUM(ii.quantity * ii.unit_price), 2) AS revenue,
-               COUNT(DISTINCT i.invoice_no) AS orders
+               COUNT(DISTINCT i.invoice_no) AS orders,
+               COUNT(DISTINCT i.customer_id) AS customers,
+               SUM(ii.quantity) AS units
         {base} GROUP BY 1 ORDER BY 1""", p)
+    for m in monthly:
+        m["aov"] = round(m["revenue"] / m["orders"], 2) if m["orders"] else 0
 
     products = q(conn, f"""
         SELECT pr.description AS product, ROUND(SUM(ii.quantity * ii.unit_price), 2) AS revenue
@@ -94,9 +105,15 @@ def rfm_segments(conn):
 
 def main():
     conn = sqlite3.connect(DB_FILE)
-    data = {"views": {}}
+    top = q(conn, f"""
+        SELECT i.country FROM invoices i JOIN invoice_items ii ON ii.invoice_no = i.invoice_no
+        GROUP BY 1 ORDER BY SUM(ii.quantity * ii.unit_price) DESC LIMIT {N_COUNTRIES}""")
+    countries = [r["country"] for r in top]
+    markets = MARKETS + ["c:" + c for c in countries if c != "United Kingdom"]
+
+    data = {"views": {}, "countries": countries}
     for y in YEARS:
-        for m in MARKETS:
+        for m in markets:
             data["views"][f"{y}|{m}"] = build_one(conn, y, m)
             print("built", y, m)
     data["rfm"] = rfm_segments(conn)
