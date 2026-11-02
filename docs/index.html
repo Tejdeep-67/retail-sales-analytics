@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retail Sales Dashboard | Tejdeep Kellampalli</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Retail Sales Dashboard</h1>
+      <p class="sub">Online Retail II (UCI) &middot; Dec 2009 &ndash; Dec 2011 &middot; values in GBP</p>
+    </div>
+    <div class="slicers">
+      <label>Year
+        <select id="year">
+          <option>All</option>
+          <option>2010</option>
+          <option>2011</option>
+        </select>
+      </label>
+      <label>Market
+        <select id="market">
+          <option>All</option>
+          <option>UK</option>
+          <option>International</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <section class="kpis">
+      <div class="card"><span class="label">Revenue</span><span class="value" id="k-revenue">-</span></div>
+      <div class="card"><span class="label">Orders</span><span class="value" id="k-orders">-</span></div>
+      <div class="card"><span class="label">Avg Order Value</span><span class="value" id="k-aov">-</span></div>
+      <div class="card"><span class="label">Customers</span><span class="value" id="k-customers">-</span></div>
+      <div class="card"><span class="label">Repeat Customers</span><span class="value" id="k-repeat">-</span></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel wide"><h2>Monthly revenue <span class="note">(Dec 2011 only has data up to the 9th)</span></h2><div id="c-monthly" class="chart"></div></div>
+      <div class="panel"><h2>Top 10 products</h2><div id="c-products" class="chart"></div></div>
+      <div class="panel"><h2>Top countries</h2><div id="c-countries" class="chart"></div></div>
+      <div class="panel"><h2>Orders by day and hour</h2><div id="c-heat" class="chart"></div></div>
+      <div class="panel"><h2>Customer segments (RFM, all data)</h2><div id="c-rfm" class="chart"></div></div>
+    </section>
+
+    <p class="foot">
+      Built with SQLite, Python and Plotly. Code and SQL:
+      <a href="https://github.com/Tejdeep-67/retail-sales-analytics">github.com/Tejdeep-67/retail-sales-analytics</a>
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
