@@ -1,5 +1,5 @@
 """
-Builds the static dashboard in docs/ (served with GitHub Pages).
+Builds the data for the static dashboard in docs/ (hosted on Netlify).
 
 The page has slicers for year and market, and clicking a country in the
 country chart filters the other visuals (like cross-filtering in Power BI).
@@ -94,13 +94,13 @@ def build_one(conn, year, market):
             "countries": countries, "heat": heat}
 
 
-def rfm_segments(conn):
-    # reuse the query from analysis.sql
+def named_query(conn, name):
+    # reuse a query from analysis.sql by its "-- name:" line
     with open(os.path.join(BASE, "sql", "analysis.sql")) as f:
         text = f.read()
-    start = text.index("-- name: rfm_segments")
-    end = text.index("-- name:", start + 10)
-    return q(conn, text[start:end])
+    start = text.index("-- name: " + name)
+    end = text.find("-- name:", start + 10)
+    return q(conn, text[start:end] if end != -1 else text[start:])
 
 
 def main():
@@ -116,7 +116,11 @@ def main():
         for m in markets:
             data["views"][f"{y}|{m}"] = build_one(conn, y, m)
             print("built", y, m)
-    data["rfm"] = rfm_segments(conn)
+    # customer page (these don't change with the slicers)
+    data["rfm"] = named_query(conn, "rfm_segments")
+    data["pareto"] = named_query(conn, "pareto_customers")
+    data["cohorts"] = named_query(conn, "cohort_retention")
+    data["returns"] = named_query(conn, "returns_summary")
     data["date_range"] = q(conn, "SELECT MIN(invoice_date) AS start, MAX(invoice_date) AS end FROM invoices")[0]
     conn.close()
 
