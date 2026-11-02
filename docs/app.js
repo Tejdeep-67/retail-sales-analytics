@@ -17,6 +17,9 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 // ---------- helpers ----------
 const $ = (id) => document.getElementById(id);
 
+// short axis labels: £1.2M, £600K
+const axisMoney = (x) => (x >= 1e6 ? "\u00a3" + (x / 1e6).toFixed(1) + "M" : x >= 1e3 ? "\u00a3" + (x / 1e3).toFixed(0) + "K" : "\u00a3" + x);
+
 function money(x, digits) {
   const a = Math.abs(x);
   if (a >= 1e6) return "\u00a3" + (x / 1e6).toFixed(digits ?? 2) + "M";
@@ -137,7 +140,7 @@ function drawKpis(v) {
 function drawMonthly(v) {
   const rows = v.monthly;
   chart("c-monthly").setOption(baseOpts({
-    grid: { left: 52, right: 46, top: 30, bottom: 30 },
+    grid: { left: 8, right: 8, top: 30, bottom: 26, containLabel: true },
     legend: { top: 0, right: 0, itemWidth: 12, itemHeight: 8, textStyle: { color: C.muted } },
     tooltip: {
       ...baseOpts().tooltip, trigger: "axis",
@@ -150,7 +153,7 @@ function drawMonthly(v) {
       axisLabel: { color: C.muted, hideOverlap: true },
     },
     yAxis: [
-      { type: "value", axisLabel: { color: C.muted, formatter: (x) => money(x, 1) }, splitLine: { lineStyle: { color: C.grid } } },
+      { type: "value", axisLabel: { color: C.muted, formatter: axisMoney }, splitLine: { lineStyle: { color: C.grid } } },
       { type: "value", axisLabel: { color: C.muted, formatter: (x) => (x >= 1000 ? x / 1000 + "K" : x) }, splitLine: { show: false } },
     ],
     series: [
@@ -387,7 +390,7 @@ function drawPareto() {
   let cum = 0;
   const cumul = rows.map((r) => +(cum += r.revenue_share_pct).toFixed(1));
   chart("c-pareto").setOption(baseOpts({
-    grid: { left: 46, right: 46, top: 30, bottom: 30 },
+    grid: { left: 8, right: 8, top: 30, bottom: 26, containLabel: true },
     legend: { top: 0, right: 0, itemWidth: 12, itemHeight: 8, textStyle: { color: C.muted } },
     tooltip: { ...baseOpts().tooltip, trigger: "axis" },
     xAxis: { type: "category", data: ["Top 20%", "20\u201340%", "40\u201360%", "60\u201380%", "Bottom 20%"], axisTick: { show: false }, axisLabel: { color: C.muted } },
@@ -404,10 +407,10 @@ function drawPareto() {
 function drawReturns() {
   const rows = DATA.returns;
   chart("c-returns").setOption(baseOpts({
-    grid: { left: 56, right: 16, top: 24, bottom: 30 },
+    grid: { left: 8, right: 16, top: 24, bottom: 26, containLabel: true },
     tooltip: { ...baseOpts().tooltip, trigger: "axis", formatter: (ps) => `<b>${ps[0].axisValue}</b><br>${money(ps[0].value)} from ${num(rows[ps[0].dataIndex].cancelled_invoices)} invoices` },
     xAxis: { type: "category", data: rows.map((r) => (r.year === "2009" ? "2009 (Dec only)" : r.year === "2011" ? "2011 (to 9 Dec)" : r.year)), axisTick: { show: false }, axisLabel: { color: C.muted } },
-    yAxis: { type: "value", axisLabel: { color: C.muted, formatter: (x) => money(x, 0) }, splitLine: { lineStyle: { color: C.grid } } },
+    yAxis: { type: "value", axisLabel: { color: C.muted, formatter: axisMoney }, splitLine: { lineStyle: { color: C.grid } } },
     series: [{ type: "bar", barMaxWidth: 54, data: rows.map((r) => r.cancelled_value),
       label: { show: true, position: "top", color: C.ink, fontWeight: 600, formatter: (p) => money(p.value) },
       itemStyle: { borderRadius: [5, 5, 0, 0], color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "#f5b75d" }, { offset: 1, color: "#e08e1c" }]) } }],
