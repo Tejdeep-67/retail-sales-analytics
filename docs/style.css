@@ -192,6 +192,7 @@ main { padding: 20px 28px 8px; max-width: 1480px; margin: 0 auto; }
 .seg-advice { margin: auto 0 4px; padding: 12px 14px; border-left: 3px solid var(--accent); background: #fff8ec; border-radius: 0 8px 8px 0; font-size: 13px; }
 
 .foot { text-align: center; color: var(--muted); font-size: 12px; margin: 22px 0 10px; }
+.foot a { color: inherit; text-underline-offset: 2px; }
 
 /* bottom page tabs, like report pages in Power BI */
 .tabs {
