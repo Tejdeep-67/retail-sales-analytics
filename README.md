@@ -139,3 +139,7 @@ You can also open `data/retail.db` in DB Browser for SQLite and run the queries 
 
 - Product categories (the data has none, so it would need grouping by keywords in the description)
 - A simple forecast of monthly revenue for the next quarter
+
+## License
+
+MIT for the code, see [LICENSE](LICENSE). The Online Retail II dataset is from the UCI Machine Learning Repository (CC BY 4.0).
