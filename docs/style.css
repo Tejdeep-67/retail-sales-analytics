@@ -265,7 +265,3 @@ main { padding: 20px 28px 8px; max-width: 1480px; margin: 0 auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
-
-/* netlify adds a small badge iframe in the bottom-right corner on free sites;
-   lift it above the page tabs so it never covers them */
-body > iframe[style*="2147483645"] { bottom: 64px !important; }
